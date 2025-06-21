@@ -2,6 +2,7 @@ printer:
   image:
     rotate: 0
     rotate_to_fit: true
+    rotate_to_fit_threshold_factor: 3
   delayms:
     default: 0
     image: 1000
