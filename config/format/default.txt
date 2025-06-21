@@ -1,0 +1,6 @@
+<message.img>
+<message.text>
+<message.url>
+
+From: <sender>
+At: <message.datetime.received>
