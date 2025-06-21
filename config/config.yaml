@@ -3,8 +3,13 @@ printer:
     rotate: 0
     rotate_to_fit: true
     rotate_to_fit_threshold_factor: 3
-  delayms:
-    default: 0
+  text:
+    format: 'debug'
+  url:
+    show_qr: true
+    reference_urls: true
+  cooldown_ms:
+    message: 0
     image: 1000
 security:
   allow_unauthenticated: true
