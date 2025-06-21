@@ -1,3 +1,10 @@
+printer:
+  image:
+    rotate: 0
+    rotate_to_fit: true
+  delayms:
+    default: 0
+    image: 1000
 security:
   allow_unauthenticated: true
   text_limit: 1000
