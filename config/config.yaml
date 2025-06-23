@@ -1,4 +1,7 @@
 printer:
+  port: 'COM5'
+  baud: 38400
+  always_cut: false
   image:
     rotate: 0
     rotate_to_fit: true
