@@ -236,8 +236,15 @@ def build_actions(p: Printer, m: Message, tmpl: str) -> List[PrinterAction]:
     urls         = re.findall(r"https?://\S+", m.text) if (show_qr or ref_urls) else []
 
     if ref_urls:
-        for i, u in enumerate(urls, 1):
-            m.text = m.text.replace(u, f"[{i}]")
+        seen = {}
+        index = 1
+        for u in urls:
+            if u not in seen:
+                seen[u] = index
+                index += 1
+
+        for url, i in seen.items():
+            m.text = m.text.replace(url, f"[{i}]")
 
     repl = {
         "{sender}":   m.sender or "Unknown",
@@ -286,10 +293,14 @@ def build_actions(p: Printer, m: Message, tmpl: str) -> List[PrinterAction]:
 
         elif part == "{qr_codes}":
             if show_qr and urls:
-                for i, url in enumerate(urls, 1):
-                    actions.append(PrinterAction("qr", p.print_qr, url))
-                    label = f"[{i}] {url}" if ref_urls else url
-                    actions.append(PrinterAction("qr label", p.print_text, label))
+                seen = {}
+                for url in urls:
+                    if url not in seen:
+                        index = len(seen) + 1
+                        seen[url] = index
+                        actions.append(PrinterAction("qr", p.print_qr, url))
+                        label = f"[{index}] {url}" if ref_urls else url
+                        actions.append(PrinterAction("qr label", p.print_text, label))
 
         elif part.startswith("{") and part.endswith("}"):
             continue
