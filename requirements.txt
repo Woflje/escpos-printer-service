@@ -2,3 +2,4 @@ dotenv
 emoji
 escpos
 tinydb
+tinydb-serialization

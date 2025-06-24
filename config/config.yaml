@@ -1,13 +1,15 @@
 printer:
-  port: 'COM5'
+  port: '/dev/ttyUSB0'
   baud: 38400
   always_cut: false
   image:
     rotate: 0
     rotate_to_fit: true
     rotate_to_fit_threshold_factor: 3
+    max_width: 512
   text:
-    format: 'debug'
+    template: 'debug'
+    allow_custom_template: true
   url:
     show_qr: true
     reference_urls: true

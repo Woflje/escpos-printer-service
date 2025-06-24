@@ -20,8 +20,10 @@ message if any:
 qr_codes if any:
 {qr_codes}
 
+<code>
 From: {sender}
 Sent at: {sent}
 Received at: {received}
 Printed at: {printed}
+</code>
 """
