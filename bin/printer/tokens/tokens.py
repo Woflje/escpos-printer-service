@@ -25,6 +25,7 @@ class Token:
     def render(self, p: "Printer", m: Message) -> List[PrinterAction]:
         raise NotImplementedError
 
+
 class TextToken(Token):
     def __init__(self, text: str):
         super().__init__()
@@ -32,6 +33,7 @@ class TextToken(Token):
 
     def render(self, p: "Printer", m: "Message") -> list[PrinterAction]:
         return [PrinterAction("text", p.print_text, self.text)]
+
 
 class StyledToken(Token):
     align       : str  | None = None
@@ -86,7 +88,8 @@ class StyledToken(Token):
     def render(self, p: "Printer", m: "Message") -> list[PrinterAction]:
         actions, _ = self.render_ctx(p, m, DEFAULT_STYLE)
         return actions
-    
+
+
 class H1Token(StyledToken):  	tag, width, height = 	"<h1>", 3, 3
 class H2Token(StyledToken):  	tag, width, height = 	"<h2>", 2, 2
 class CenterToken(StyledToken): tag, align = 			"<center>", "center"

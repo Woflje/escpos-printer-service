@@ -10,11 +10,17 @@ from io import BytesIO
 from bin.load import CONFIG
 from emoji import demojize
 import time
-from bin.db import store_message, load_oldest_message, delete_message_by_id
+from bin.db import store_message, load_oldest_message, delete_message_by_id, load_all_messages
 from bin.message import Message
+from bin.logger import logging
+from prometheus_client import start_http_server, Gauge, Counter
 
 DATA_DIR = Path("data/img/tmp")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+PRINTER_UP = Gauge('printer_server_up', '1 = server main loop running')
+PRINTER_ERRORS = Counter('printer_server_errors_total', 'Total unhandled server errors')
+PRINTER_QUEUE_SIZE = Gauge('printer_server_queue_length', 'Current number of unprocessed messages')
 
 text_processors = [
 	demojize,
@@ -55,21 +61,22 @@ def recv_one_line(sock, bufsize=4096, terminator=b"\n") -> bytes:
 	chunks = []
 	while True:
 		chunk = sock.recv(bufsize)
-		if not chunk:                       # connection closed
+		if not chunk:
 			break
 		chunks.append(chunk)
-		if terminator in chunk:             # found end-of-line
+		if terminator in chunk:
 			break
 	return b"".join(chunks)
 
 
 def handle_client(conn, addr):
-	print(f"[+] Connection from {addr}")
+	logging.getLogger(__name__).info(f"Connection from {addr}")
 	try:
-		raw = recv_one_line(conn)           # <-- use helper
+		raw = recv_one_line(conn)
 		message_data = json.loads(raw.decode("utf-8").rstrip())
 
 		if not is_authenticated(message_data):
+			logging.getLogger(__name__).info(f"{addr} was not authorized")
 			conn.send(b"Unauthorized.\n")
 			return
 
@@ -84,8 +91,10 @@ def handle_client(conn, addr):
 
 		store_message(message_data)
 		conn.send(b"Message stored.\n")
+		logging.getLogger(__name__).info(f"Message from {addr} stored")
 	except Exception as e:
-		print(f"[!] Error: {e}")
+		logging.getLogger(__name__).error(e)
+		PRINTER_ERRORS.inc()
 		conn.send(f"Error: {e}\n".encode())
 	finally:
 		conn.close()
@@ -94,7 +103,9 @@ def start_server(host="127.0.0.1", port=9000):
 	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 		s.bind((host, port))
 		s.listen()
-		print(f"[*] Listening on {host}:{port}...")
+		logging.getLogger(__name__).info(f"Server listening on {host}:{port}")
+		start_http_server(9100)
+		PRINTER_UP.set(1)
 		while True:
 			conn, addr = s.accept()
 			thread = threading.Thread(target=handle_client, args=(conn, addr))
@@ -102,14 +113,16 @@ def start_server(host="127.0.0.1", port=9000):
 
 def process_next_message(printer, template):
 	record = load_oldest_message()
+	PRINTER_QUEUE_SIZE.set(len(load_all_messages()))
 	if record:
 		message = Message.from_dict(record)
 		printer.print_message(message, template)
 		delete_message_by_id(message.id)
-		print(f"Processed message: {message.id} - {message.text}")
+		logging.getLogger(__name__).info(f"Processed message: {message.id} from {message.sender}")
 	
 
 def processing_loop(printer, template, delay_seconds=2.5):
+	logging.getLogger(__name__).info("Starting processing")
 	while True:
 		process_next_message(printer, template)
 		time.sleep(delay_seconds)

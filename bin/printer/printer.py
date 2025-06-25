@@ -10,7 +10,9 @@ import re
 from .tokens.tokens import Token, TextToken, StyledToken
 from .tokens.parser import parse_tokens
 from time import sleep
-
+from bin.logger import logging
+import sys
+import io
 
 def _format_dt(dt):
     return dt.strftime("%Y-%m-%d %H:%M:%S") if dt else "Unknown"
@@ -24,6 +26,10 @@ class Printer:
 		self.default_settings().run()
 
 	def connect(self) -> None:
+		log = logging.getLogger(__name__)
+		log.info(f"Connecting to {self.name}...")
+		old_stdout = sys.stdout
+		sys.stdout = buffer = io.StringIO()
 		try:
 			self.printer = Serial(
 				devfile=self.port,
@@ -37,6 +43,13 @@ class Printer:
 			)
 		except Exception as e:
 			raise RuntimeError(f"Printer '{self.name}' connection failed: {e}")
+		finally:
+			sys.stdout = old_stdout
+			output = buffer.getvalue().strip()
+			if output:
+				for line in output.splitlines():
+					log.info(f"[escpos] {line}")
+		log.info(f"Connected to {self.name}")
 	
 	def print_text(self, text: str):
 		self.printer._raw(encode_cp858(text)) # type: ignore

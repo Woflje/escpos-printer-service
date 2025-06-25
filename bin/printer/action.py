@@ -7,8 +7,8 @@ class PrinterAction:
 
     def run(self) -> None:
         try:
-            logging.getLogger(__name__).info(f"[ESC/POS] {self.desc} started")
+            logging.getLogger(__name__).debug(f"Action '{self.desc}' started")
             self.func(*self.args, **self.kw)
         except Exception as e:
-            logging.getLogger(__name__).error(f"[ESC/POS] {self.desc} failed: {e}")
+            logging.getLogger(__name__).error(f"Action '{self.desc}' failed: {e}")
             raise

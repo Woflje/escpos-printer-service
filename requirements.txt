@@ -3,3 +3,4 @@ emoji
 escpos
 tinydb
 tinydb-serialization
+prometheus_client

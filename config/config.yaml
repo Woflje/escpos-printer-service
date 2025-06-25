@@ -17,5 +17,7 @@ printer:
     message: 0
     image: 1000
 security:
-  allow_unauthenticated: true
+  allow_unauthenticated: false
   text_limit: 1000
+  valid_api_keys:
+   - "koekje"

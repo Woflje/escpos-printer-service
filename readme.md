@@ -10,7 +10,9 @@
 - [ ] Pylanced approved code
 - [ ] Better logging
 - [ ] More dynamic (config, env)
-- [ ] Authentication
+- [x] Authentication
+- [ ] Server printer info response
+- [ ] Server online response
 - [ ] Scheduled queue processing
 - [ ] Remote toggle queue processing
 - [ ] Printer models
