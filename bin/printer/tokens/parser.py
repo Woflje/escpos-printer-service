@@ -6,6 +6,10 @@ def parse_tokens(src: str) -> list[Token]:
     Builds a proper tree so inner tags get rendered too.
     Supports <tag>, </tag>, <tag/> self-close.
     """
+    ESCAPED_OPEN = "##ESCAPED_LT##"
+    ESCAPED_CLOSE = "##ESCAPED_GT##"
+    src = src.replace(r"\<", ESCAPED_OPEN).replace(r"\>", ESCAPED_CLOSE)
+
     parts = re.split(r"(<[^>]+>)", src)
     root: list[Token] = []
     stack: list[Token] = []
@@ -16,6 +20,8 @@ def parse_tokens(src: str) -> list[Token]:
     for part in parts:
         if not part:
             continue
+
+        part = part.replace(ESCAPED_OPEN, "<").replace(ESCAPED_CLOSE, ">")
 
         if part.startswith("<") and part.endswith(">"):
             tag_txt = part.strip()
@@ -32,6 +38,7 @@ def parse_tokens(src: str) -> list[Token]:
             else:
                 cls = Token.registry.get(key)
                 if not cls:
+                    current_container().append(TextToken(part))
                     continue
                 tok = cls()
                 current_container().append(tok)
