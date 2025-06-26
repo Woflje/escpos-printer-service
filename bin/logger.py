@@ -3,10 +3,8 @@ import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from datetime import datetime
-from dotenv import load_dotenv
 from typing import Callable, List
 
-# TODO config path
 LOG_DIR = Path("data/logs")
 LATEST_LOG = LOG_DIR / "latest.log"
 
@@ -16,7 +14,6 @@ def register_error_hook(func: Callable[[str], None]):
 	error_hooks.append(func)
 
 class HookingHandler(logging.Handler):
-	"""Custom handler that calls functions on error."""
 	def emit(self, record: logging.LogRecord):
 		if record.levelno >= logging.ERROR:
 			message = self.format(record)
@@ -27,27 +24,23 @@ class HookingHandler(logging.Handler):
 					logging.getLogger(__name__).exception("Error in error hook: %s", e)
 
 def setup_logging():
-    load_dotenv()
     LOG_DIR.mkdir(exist_ok=True)
 
-    # TODO use config time format
-    date_format = "%d-%m-%Y"
-    time_format = "%H:%M:%S"
+    log_date_format = os.environ.get("DATETIME_FORMAT","%Y-%m-%d %H:%M:%S")
 
     if LATEST_LOG.exists():
         # Rotate log file
-        timestamp = datetime.now().strftime(f"{date_format}_{time_format}")
+        timestamp = datetime.now().strftime(log_date_format)
         backup_log = LOG_DIR / f"{timestamp}.log"
         try:
             LATEST_LOG.rename(backup_log)
         except Exception as e:
             print(f"Failed to rotate log: {e}")
 
-    log_level = os.getenv("LOG_LEVEL", "DEBUG").upper()
+    log_level = os.environ.get("LOG_LEVEL", "DEBUG").upper()
     level = getattr(logging, log_level, logging.DEBUG)
 
     log_format = "[{asctime}] [{levelname:^7}] [{name}] {message}"
-    log_date_format = f"{date_format} {time_format}"
     style = "{"
 
     formatter_console = logging.Formatter(fmt=log_format, datefmt=log_date_format, style=style)
