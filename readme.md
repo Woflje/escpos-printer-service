@@ -7,15 +7,13 @@
     	- [x] Any extension
     	- [x] Length and width
   	- [x] URL
-- [ ] Pylanced approved code
-- [ ] Better logging
-- [ ] More dynamic (config, env)
+- [x] Pylanced approved code
+- [X] Better logging
+- [x] More dynamic (config, env)
 - [x] Authentication
-- [ ] Server printer info response
-- [ ] Server online response
+- [x] Server printer info response
 - [ ] Scheduled queue processing
 - [ ] Remote toggle queue processing
-- [ ] Printer models
 - [ ] Write documentation
 	- [ ] Credits
  	- [ ] Windows, WSL, Linux
