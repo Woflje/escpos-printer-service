@@ -4,6 +4,7 @@ import re
 ESCAPED_OPEN = "##ESCAPED_LT##"
 ESCAPED_CLOSE = "##ESCAPED_GT##"
 
+
 def parse_tokens(src: str) -> list[Token]:
     src = src.replace(r"\<", ESCAPED_OPEN).replace(r"\>", ESCAPED_CLOSE)
     parts = re.split(r"(<[^>]+>)", src)

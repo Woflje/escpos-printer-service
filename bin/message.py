@@ -7,7 +7,7 @@ from typing import Any, Mapping, Optional, TypedDict
 
 
 def dt_to_iso(value: Optional[datetime]) -> Optional[str]:
-        return value.isoformat() if value else None
+    return value.isoformat() if value else None
 
 
 class MessageRecord(TypedDict, total=False):
@@ -37,7 +37,7 @@ class Message:
     def to_record(self) -> dict[str, Any]:
         raw: dict[str, Any] = asdict(self)
         for key in ("dt_sent", "dt_received", "dt_printed"):
-            raw[key] = dt_to_iso(raw[key])          # type: ignore[index]
+            raw[key] = dt_to_iso(raw[key])  # type: ignore[index]
 
         return {k: v for k, v in raw.items() if v is not None}
 

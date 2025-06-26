@@ -1,6 +1,7 @@
 from typing import Callable, Any
 from bin.logger import logging
 
+
 class PrinterAction:
     def __init__(self, desc: str, func: Callable[..., Any], *args, **kw) -> None:
         self.desc, self.func, self.args, self.kw = desc, func, args, kw

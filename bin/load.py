@@ -7,6 +7,7 @@ import importlib
 CONFIG_PATH = "config/config.yaml"
 PRINTKEYS_PATH = "data/printkeys"
 
+
 def load_yaml(path: str | Path) -> dict[str, Any]:
     path = Path(path)
 
@@ -18,7 +19,8 @@ def load_yaml(path: str | Path) -> dict[str, Any]:
             return yaml.safe_load(f) or {}
         except yaml.YAMLError as e:
             raise yaml.YAMLError(f"Error parsing YAML file {path}: {e}")
-        
+
+
 def load_named_api_keys(folder: str = "data/printkeys") -> dict[str, str]:
     key_dir = Path(folder)
     keys: dict[str, str] = {}
@@ -31,6 +33,7 @@ def load_named_api_keys(folder: str = "data/printkeys") -> dict[str, str]:
             logging.getLogger(__name__).warning(f"could not read {file.name}: {e}")
     return keys
 
+
 def load_template_by_name(name: str):
     try:
         mod = importlib.import_module(f"config.template.{name}")
@@ -38,5 +41,6 @@ def load_template_by_name(name: str):
     except Exception as e:
         print(f"Error loading template '{name}': {e}")
         return None
+
 
 CONFIG = load_yaml(CONFIG_PATH)
