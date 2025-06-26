@@ -12,8 +12,8 @@
 - [x] More dynamic (config, env)
 - [x] Authentication
 - [x] Server printer info response
-- [ ] Scheduled queue processing
-- [ ] Remote toggle queue processing
+- [x] Scheduled queue processing
+- [x] Remote toggle queue processing
 - [ ] Write documentation
 	- [ ] Credits
  	- [ ] Windows, WSL, Linux

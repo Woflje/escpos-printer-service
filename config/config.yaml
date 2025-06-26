@@ -23,6 +23,10 @@ printer:
   cooldown_ms:
     message: 0
     image: 1000
+  schedule:
+    enabled: true
+    start: "07:30"
+    end: "00:00"
 server:
   prometheus_enabled: true
 security:

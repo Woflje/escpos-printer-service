@@ -37,6 +37,28 @@ text_processors = [
 ]
 
 
+def is_within_schedule() -> bool:
+    schedule = CONFIG.get("printer", {}).get("schedule", {})
+    if not schedule.get("enabled", False):
+        return True
+
+    try:
+        start_str = schedule.get("start", "00:00")
+        end_str = schedule.get("end", "23:59")
+
+        start_time = datetime.strptime(start_str, "%H:%M").time()
+        end_time = datetime.strptime(end_str, "%H:%M").time()
+        now = datetime.now().time()
+
+        if start_time <= end_time:
+            return start_time <= now <= end_time
+        else:
+            return now >= start_time or now <= end_time
+    except Exception as e:
+        logging.getLogger(__name__).warning(f"Invalid schedule config: {e}")
+        return True
+
+
 def process_text(text: str) -> str:
     for processor in text_processors:
         text = processor(text)
@@ -97,6 +119,8 @@ def summary() -> str:
             .get("text", {})
             .get("allow_custom_template", False),
             "text_limit": CONFIG.get("security", {}).get("text_limit", -1),
+            "schedule": CONFIG.get("printer", {}).get("schedule", {}),
+            "currently_processing": get_message_processing() and is_within_schedule(),
         },
         indent=2,
     )
@@ -143,14 +167,15 @@ def handle_client(conn, addr):
 
             if not isinstance(flag, bool):
                 conn.send(b"Error: 'message_processing' must be true or false.\n")
-                log.warning(f"{addr} sent invalid control payload: {message_data.get('value')}")
+                log.warning(
+                    f"{addr} sent invalid control payload: {message_data.get('value')}"
+                )
                 return
 
             set_message_processing(flag)
             conn.send(b"Message processing updated.\n")
             log.info(f"Message processing set to {flag} by key {printkey_name}")
             return
-
 
         text = message_data.get("text")
         if text:
@@ -219,7 +244,7 @@ def processing_loop(printer, template):
     log = logging.getLogger(__name__)
     log.info("Starting processing loop")
     while True:
-        if get_message_processing():
+        if get_message_processing() and is_within_schedule():
             process_next_message(printer, template)
 
 
