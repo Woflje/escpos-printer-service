@@ -1,7 +1,7 @@
 # ESC/POS Printer Service
 
 A lightweight Python service that **receives messages over TCP, queues them in TinyDB, and prints them on an ESC/POS thermal printer**.  
-It supports text, images, QR codes, custom HTML-like templates, Prometheus metrics, fine-grained API-key permissions, runtime control (pause/resume), and scheduled working hours.
+It supports text, images, QR codes, custom HTML-like templates, Prometheus metrics, print-key permissions, runtime control (pause/resume), and scheduled working hours.
 
 ---
 
