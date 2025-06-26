@@ -15,10 +15,13 @@ from bin.db import (
     load_oldest_message,
     delete_message_by_id,
     load_all_messages,
+    set_message_processing,
+    get_message_processing,
 )
 from bin.message import Message
 from bin.logger import logging
 from prometheus_client import start_http_server, Gauge, Counter
+from typing import Tuple, List, Optional
 
 IMG_DATA_DIR = Path("data/img/tmp")
 IMG_DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -64,11 +67,11 @@ def save_image_from_base64(image_b64: str, message_id: str) -> str:
     return str(image_path)
 
 
-def find_printkey(data: dict) -> str | None:
+def find_printkey(data: dict) -> Optional[Tuple[str, List[str]]]:
     api_key = data.get("api_key")
-    for name, key in load_named_api_keys().items():
-        if key == api_key:
-            return name
+    for name, rec in load_named_api_keys().items():
+        if rec["key"] == api_key:
+            return name, rec.get("permissions", [])
     return None
 
 
@@ -107,14 +110,16 @@ def handle_client(conn, addr):
         message_data = json.loads(raw.decode("utf-8").rstrip())
 
         req_type = message_data.get("type", "message")
-        printkey_name = None
+        printkey_name: Optional[str] = None
+        permissions: List[str] = []
 
         if not CONFIG["security"].get("allow_unauthenticated", False):
-            printkey_name = find_printkey(message_data)
-            if not printkey_name:
+            key_info = find_printkey(message_data)
+            if key_info is None:
                 log.info(f"{addr} was not authorized")
                 conn.send(b"Unauthorized.\n")
                 return
+            printkey_name, permissions = key_info
 
         if req_type == "summary":
             conn.send(summary().encode() + b"\n")
@@ -122,6 +127,30 @@ def handle_client(conn, addr):
                 f"Sent summary to {addr} (key: {printkey_name or 'unauthenticated'})"
             )
             return
+
+        if req_type == "control":
+            if "control" not in permissions:
+                conn.send(b"Forbidden.\n")
+                log.info(f"{addr} tried control without permission")
+                return
+
+            raw_value = message_data.get("value")
+
+            if isinstance(raw_value, dict):
+                flag = raw_value.get("message_processing", None)
+            else:
+                flag = None
+
+            if not isinstance(flag, bool):
+                conn.send(b"Error: 'message_processing' must be true or false.\n")
+                log.warning(f"{addr} sent invalid control payload: {message_data.get('value')}")
+                return
+
+            set_message_processing(flag)
+            conn.send(b"Message processing updated.\n")
+            log.info(f"Message processing set to {flag} by key {printkey_name}")
+            return
+
 
         text = message_data.get("text")
         if text:
@@ -186,11 +215,12 @@ def process_next_message(printer, template):
         )
 
 
-def processing_loop(printer, template, delay_seconds=2.5):
-    logging.getLogger(__name__).info("Starting processing")
+def processing_loop(printer, template):
+    log = logging.getLogger(__name__)
+    log.info("Starting processing loop")
     while True:
-        process_next_message(printer, template)
-        time.sleep(delay_seconds)
+        if get_message_processing():
+            process_next_message(printer, template)
 
 
 def start_processing_loop(printer, template):

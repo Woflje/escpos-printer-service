@@ -1,6 +1,6 @@
 import yaml
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List
 from .logger import logging
 import importlib
 
@@ -21,17 +21,23 @@ def load_yaml(path: str | Path) -> dict[str, Any]:
             raise yaml.YAMLError(f"Error parsing YAML file {path}: {e}")
 
 
-def load_named_api_keys(folder: str = "data/printkeys") -> dict[str, str]:
-    key_dir = Path(folder)
-    keys: dict[str, str] = {}
-    for file in key_dir.glob("*.txt"):
-        try:
-            content = file.read_text(encoding="utf-8").strip()
-            if content:
-                keys[file.stem] = content
-        except Exception as e:
-            logging.getLogger(__name__).warning(f"could not read {file.name}: {e}")
-    return keys
+def load_named_api_keys(folder: str = "data/printkeys") -> Dict[str, dict]:
+    """
+    Returns {key_name: {"key": api_key, "permissions": [str, ...]}, ...}
+
+    Each .txt file:
+        line 1 → the key
+        line 2 → optional comma-separated list of permissions
+    """
+    result: Dict[str, dict] = {}
+    for f in Path(folder).glob("*.txt"):
+        lines: List[str] = f.read_text(encoding="utf-8").splitlines()
+        if not lines:
+            continue
+        api_key = lines[0].strip()
+        perms   = [p.strip() for p in lines[1].split(",")] if len(lines) > 1 else []
+        result[f.stem] = {"key": api_key, "permissions": perms}
+    return result
 
 
 def load_template_by_name(name: str):

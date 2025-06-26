@@ -26,6 +26,23 @@ def get_db():
             db.close()
 
 
+def set_message_processing(enabled: bool) -> None:
+    with get_db() as db:
+        settings = db.table("settings")
+        settings.upsert(
+            {"name": "message_processing", "value": enabled},
+            Query().name == "message_processing",
+        )
+
+
+def get_message_processing() -> bool:
+    """Return current flag (default True if not yet set)."""
+    with get_db() as db:
+        settings = db.table("settings")
+        rec = settings.get(Query().name == "message_processing")
+        return bool(rec["value"]) if rec else True   # type: ignore[attr-defined]
+
+
 def store_message(raw: dict[str, Any]) -> str:
     msg = Message.from_dict(raw)
     with get_db() as db:
