@@ -37,6 +37,12 @@ text_processors = [
 ]
 
 
+def process_text(text: str) -> str:
+    for processor in text_processors:
+        text = processor(text)
+    return text
+
+
 def is_within_schedule() -> bool:
     schedule = CONFIG.get("printer", {}).get("schedule", {})
     if not schedule.get("enabled", False):
@@ -57,12 +63,6 @@ def is_within_schedule() -> bool:
     except Exception as e:
         logging.getLogger(__name__).warning(f"Invalid schedule config: {e}")
         return True
-
-
-def process_text(text: str) -> str:
-    for processor in text_processors:
-        text = processor(text)
-    return text
 
 
 def save_image_from_base64(image_b64: str, message_id: str) -> str:
@@ -182,6 +182,7 @@ def handle_client(conn, addr):
             limit = CONFIG["security"].get("text_limit", -1)
             if 0 < limit < len(text):
                 raise ValueError(f"Text too long. Limit is {limit} characters.")
+            message_data["text"] = process_text(text)
 
         image = message_data.get("image")
 
