@@ -2,13 +2,13 @@ import socket
 import json
 import base64
 from pathlib import Path
+import os
 
-SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 9000
+SERVER_HOST = os.environ.get("LISTEN_HOST", "127.0.0.1")
+SERVER_PORT = int(os.environ.get("LISTEN_PORT", "9000"))
 BUF_SIZE     = 4096
 
 def _read_until_newline(sock: socket.socket, bufsize=BUF_SIZE) -> bytes:
-    """Read from *sock* until we find a lone newline byte or the peer closes."""
     chunks = []
     while True:
         chunk = sock.recv(bufsize)
@@ -19,15 +19,13 @@ def _read_until_newline(sock: socket.socket, bufsize=BUF_SIZE) -> bytes:
             break
     return b''.join(chunks)
 
-def send_message(api_key=None,
-                 sender="Tester",
-                 text="Hello from client!",
-                 image_path=None):
+def send_message(sender,
+                 text,
+                 image_path=None,
+                 api_key=None):
     message = {
         "sender": sender,
-        "text":   text,
-        "cut":    True,
-        "custom_template": "{image}\n{text}"
+        "text": text,
     }
     if api_key:
         message["api_key"] = api_key
@@ -45,4 +43,4 @@ def send_message(api_key=None,
         reply = raw.strip().decode()
         print(f"[Server response] {reply}")
 
-send_message(text="<center>Whowh</center>", image_path="olbrecht.png")
+send_message("Client", "<center>\\<b\\>Hello from client!\\</b\\></center>")
