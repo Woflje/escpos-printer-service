@@ -5,7 +5,7 @@ from .action import PrinterAction
 from bin.utils import encode_cp858
 from config.style import DEFAULT_STYLE
 from datetime import datetime
-from typing import List
+from typing import List, Any
 import re
 from .tokens.tokens import Token, TextToken, StyledToken
 from .tokens.parser import parse_tokens
@@ -13,16 +13,25 @@ from time import sleep
 from bin.logger import logging
 import sys
 import io
+import os
 
 def _format_dt(dt):
-    return dt.strftime("%Y-%m-%d %H:%M:%S") if dt else "Unknown"
+    return dt.strftime(os.environ.get("DATETIME_FORMAT","%Y-%m-%d %H:%M:%S")) if dt else "Unknown"
 
 class Printer:
-	def __init__(self, name: str, port: str, baud: int) -> None:
-		self.name, self.port, self.baud = name, port, baud
-		self.config = CONFIG["printer"]
+	def __init__(self, config: dict[str, Any]) -> None:
+		self.name = 	config.get("name", "printer")
+		self.port = 	config.get("port", "/dev/ttyUSB0")
+		self.baud = 	config.get("baud", 38400)
+		self.bytesize = config.get("bytesize", 8)
+		self.parity = 	config.get("parity","N")
+		self.stopbits = config.get("stopbits",1)
+		self.timeout = 	config.get("timeout",1)
+		self.dsrdtr = 	config.get("dsrdtr", False)
+		self.profile = 	config.get("profile", "TM-T88III")
+		self.config = 	config
 		self.connect()
-		self.printer.charcode("CP858")
+		self.printer.charcode(config.get("charcode","CP858"))
 		self.default_settings().run()
 
 	def connect(self) -> None:
@@ -75,8 +84,9 @@ class Printer:
 
 	def build_actions(self, m: Message, tmpl: str) -> List[PrinterAction]:
 		# Use .get and getattr to avoid errors if keys/attributes are missing
-		if self.config.get("text", {}).get("allow_custom_template", False) and getattr(m, "custom_template", None):
-			tmpl = m.custom_template
+		if self.config.get("text", {}).get("allow_custom_template", False):
+			if (ct := getattr(m, "custom_template", None)):
+				tmpl = ct
 
 		m.dt_printed = getattr(m, "dt_printed", None) or datetime.now()
 
@@ -133,8 +143,8 @@ class Printer:
 					append_token_actions(t)
 
 			elif part == "{image}":
-				if getattr(m, "image", None):
-					actions.append(PrinterAction("image", self.print_image, m.image))
+				if getattr(m, "image_path", None):
+					actions.append(PrinterAction("image", self.print_image, m.image_path))
 					actions.append(PrinterAction("cool-down", sleep, self.config.get("cooldown_ms", {}).get("image", 0) / 1000))
 
 			elif part == "{qr_codes}":
