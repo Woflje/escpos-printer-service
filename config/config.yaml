@@ -1,0 +1,34 @@
+printer:
+  name: 'WofljeFox'
+  port: '/dev/ttyUSB0'
+  baud: 38400
+  bytesize: 8
+  parity: 'N'
+  stopbits: 1
+  timeout: 1
+  dsrdtr: false
+  profile: 'TM-T88III'
+  always_cut: false
+  image:
+    rotate: 0
+    rotate_to_fit: true
+    rotate_to_fit_threshold_factor: 3
+    max_width: 512
+  text:
+    template: 'debug'
+    allow_custom_template: true
+  url:
+    show_qr: true
+    reference_urls: true
+  cooldown_ms:
+    message: 0
+    image: 1000
+  schedule:
+    enabled: true
+    start: "07:30"
+    end: "00:00"
+server:
+  prometheus_enabled: true
+security:
+  allow_unauthenticated: false
+  text_limit: 300
