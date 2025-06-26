@@ -1,48 +1,69 @@
-from datetime import datetime
+from __future__ import annotations
 
+import uuid
+from dataclasses import dataclass, asdict
+from datetime import datetime
+from typing import Any, Mapping, Optional, TypedDict
+
+
+def dt_to_iso(value: Optional[datetime]) -> Optional[str]:
+        return value.isoformat() if value else None
+
+
+class MessageRecord(TypedDict, total=False):
+    id: str
+    text: str
+    dt_sent: str
+    dt_received: str
+    dt_printed: str
+    image_path: str
+    sender: str
+    cut: bool
+    custom_template: str
+
+
+@dataclass(slots=True)
 class Message:
-    def __init__(
-        self,
-        text: str,
-        dt_sent: datetime | None = None,
-        dt_received: datetime | None = None,
-        dt_printed: datetime | None = None,
-        image: str | None = None,
-        sender: str | None = None,
-        cut: bool = False,
-        custom_template: str | None = None,
-        id: str | None = None,
-    ):
-        self.text = text
-        self.dt_sent = dt_sent or None
-        self.dt_received = dt_received or datetime.now()
-        self.dt_printed = dt_printed or datetime.now()
-        self.image = image
-        self.sender = sender or "Unknown"
-        self.cut = cut
-        self.custom_template = custom_template
-        self.id = id
+    id: str
+    text: str = ""
+    dt_sent: Optional[datetime] = None
+    dt_received: Optional[datetime] = None
+    dt_printed: Optional[datetime] = None
+    image_path: Optional[str] = None
+    sender: Optional[str] = None
+    cut: bool = True
+    custom_template: Optional[str] = None
+
+    def to_record(self) -> dict[str, Any]:
+        raw: dict[str, Any] = asdict(self)
+        for key in ("dt_sent", "dt_received", "dt_printed"):
+            raw[key] = dt_to_iso(raw[key])          # type: ignore[index]
+
+        return {k: v for k, v in raw.items() if v is not None}
 
     @classmethod
-    def from_dict(cls, data: dict):
-        return cls(
-            text=data.get("text", ""),
-            dt_sent=_try_parse_dt(data.get("dt_sent")),
-            dt_received=_try_parse_dt(data.get("dt_received")),
-            dt_printed=_try_parse_dt(data.get("dt_printed")),
-            image=data.get("image_path"),
-            sender=data.get("sender"),
-            cut=data.get("cut", False),
-            custom_template=data.get("custom_template"),
-            id=data.get("id"),
-        )
+    def from_dict(cls, data: Mapping[str, Any] | None) -> "Message":
+        if data is None:
+            raise ValueError("Cannot build Message from None")
 
-def _try_parse_dt(value):
-    try:
-        if isinstance(value, datetime):
-            return value
-        if value:
-            return datetime.fromisoformat(value)
-    except Exception:
-        pass
-    return None
+        def _parse_dt(raw: Any) -> Optional[datetime]:
+            if isinstance(raw, datetime):
+                return raw
+            if isinstance(raw, str) and raw:
+                try:
+                    return datetime.fromisoformat(raw)
+                except ValueError:
+                    pass
+            return None
+
+        return cls(
+            id=str(data.get("id") or uuid.uuid4()),
+            text=str(data.get("text", "")),
+            dt_sent=_parse_dt(data.get("dt_sent")),
+            dt_received=_parse_dt(data.get("dt_received")),
+            dt_printed=_parse_dt(data.get("dt_printed")),
+            image_path=data.get("image_path") or None,
+            sender=data.get("sender") or None,
+            cut=bool(data.get("cut", True)),
+            custom_template=data.get("custom_template") or None,
+        )
