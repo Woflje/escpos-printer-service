@@ -1,15 +1,11 @@
 from .tokens import Token, TextToken
 import re
 
-def parse_tokens(src: str) -> list[Token]:
-    """
-    Builds a proper tree so inner tags get rendered too.
-    Supports <tag>, </tag>, <tag/> self-close.
-    """
-    ESCAPED_OPEN = "##ESCAPED_LT##"
-    ESCAPED_CLOSE = "##ESCAPED_GT##"
-    src = src.replace(r"\<", ESCAPED_OPEN).replace(r"\>", ESCAPED_CLOSE)
+ESCAPED_OPEN = "##ESCAPED_LT##"
+ESCAPED_CLOSE = "##ESCAPED_GT##"
 
+def parse_tokens(src: str) -> list[Token]:
+    src = src.replace(r"\<", ESCAPED_OPEN).replace(r"\>", ESCAPED_CLOSE)
     parts = re.split(r"(<[^>]+>)", src)
     root: list[Token] = []
     stack: list[Token] = []

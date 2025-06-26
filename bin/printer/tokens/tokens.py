@@ -61,10 +61,6 @@ class StyledToken(Token):
         m: "Message",
         cur_style: dict[str, Any],
     ) -> tuple[list[PrinterAction], dict[str, Any]]:
-        """
-        Return (actions, resulting_style).  Uses cur_style as the baseline,
-        applies overrides, renders children, then resets to cur_style.
-        """
         overrides   = self._local_overrides()
         new_style   = merged_style(cur_style, **overrides)
         actions: list[PrinterAction] = [
