@@ -5,10 +5,13 @@ printer:
   bytesize: 8
   parity: 'N'
   stopbits: 1
-  timeout: 1
+  timeout: 0
   dsrdtr: false
   profile: 'TM-T88III'
   always_cut: false
+  connection_type: usb
+  idVendor: 0x04b8
+  idProduct: 0x0e15
   image:
     rotate: 0
     rotate_to_fit: true
@@ -22,7 +25,7 @@ printer:
     reference_urls: true
   cooldown_ms:
     message: 0
-    image: 1000
+    image: 0
   schedule:
     enabled: true
     start: "07:30"

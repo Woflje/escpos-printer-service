@@ -1,4 +1,4 @@
-from escpos.printer import Serial  # type: ignore
+from escpos.printer import Serial, Usb  # type: ignore
 from bin.load import CONFIG
 from bin.message import Message
 from .action import PrinterAction
@@ -27,14 +27,7 @@ def _format_dt(dt):
 class Printer:
     def __init__(self, config: dict[str, Any]) -> None:
         self.name = config.get("name", "printer")
-        self.port = config.get("port", "/dev/ttyUSB0")
-        self.baud = config.get("baud", 38400)
-        self.bytesize = config.get("bytesize", 8)
-        self.parity = config.get("parity", "N")
-        self.stopbits = config.get("stopbits", 1)
-        self.timeout = config.get("timeout", 1)
-        self.dsrdtr = config.get("dsrdtr", False)
-        self.profile = config.get("profile", "TM-T88III")
+        self.connection_type = config.get("connection_type", "serial").lower()
         self.config = config
         self.connect()
         self.printer.charcode(config.get("charcode", "CP858"))
@@ -42,20 +35,33 @@ class Printer:
 
     def connect(self) -> None:
         log = logging.getLogger(__name__)
-        log.info(f"Connecting to {self.name}...")
+        log.info(f"Connecting to {self.name} using {self.connection_type}...")
+
         old_stdout = sys.stdout
         sys.stdout = buffer = io.StringIO()
         try:
-            self.printer = Serial(
-                devfile=self.port,
-                baudrate=self.baud,
-                bytesize=8,
-                parity="N",
-                stopbits=1,
-                timeout=1,
-                dsrdtr=False,
-                profile="TM-T88III",
-            )
+            if self.connection_type == "serial":
+                self.printer = Serial(
+                    devfile=self.config.get("port", "/dev/ttyUSB0"),
+                    baudrate=self.config.get("baud", 38400),
+                    bytesize=self.config.get("bytesize", 8),
+                    parity=self.config.get("parity", "N"),
+                    stopbits=self.config.get("stopbits", 1),
+                    timeout=self.config.get("timeout", 1),
+                    dsrdtr=self.config.get("dsrdtr", False),
+                    profile=self.config.get("profile", "TM-T88III"),
+                )
+            elif self.connection_type == "usb":
+                self.printer = Usb(
+                    idVendor=self.config["idVendor"],
+                    idProduct=self.config["idProduct"],
+                    usb_args=self.config.get("usb_args", {}),
+                    timeout=self.config.get("timeout", 0),
+                    in_ep=self.config.get("in_ep", 0x82),
+                    out_ep=self.config.get("out_ep", 0x01),
+                )
+            else:
+                raise ValueError(f"Unknown connection type: {self.connection_type}")
         except Exception as e:
             raise RuntimeError(f"Printer '{self.name}' connection failed: {e}")
         finally:
@@ -64,6 +70,7 @@ class Printer:
             if output:
                 for line in output.splitlines():
                     log.info(f"[escpos] {line}")
+
         log.info(f"Connected to {self.name}")
 
     def print_text(self, text: str):
