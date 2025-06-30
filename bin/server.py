@@ -193,10 +193,12 @@ def handle_client(conn, addr):
         message_id = str(uuid.uuid4())
         message_data["id"] = message_id
 
-        if message_data.get("image"):
+        if image:
             path = save_image_from_base64(message_data["image"], message_id)
             message_data["image_path"] = path
             message_data["image"] = None
+        else:
+            message_data["image_path"] = None
 
         store_message(message_data)
         conn.send(b"Message stored.\n")
