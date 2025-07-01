@@ -4,8 +4,8 @@ import base64
 from pathlib import Path
 import os
 
-SERVER_HOST = os.environ.get("LISTEN_HOST", "127.0.0.1")
-SERVER_PORT = int(os.environ.get("LISTEN_PORT", "9000"))
+SERVER_HOST = "0.0.0.0"
+SERVER_PORT = 9000
 BUF_SIZE     = 4096
 
 def _read_until_newline(sock: socket.socket, bufsize=BUF_SIZE) -> bytes:

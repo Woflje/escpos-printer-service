@@ -1,9 +1,9 @@
 import logging
-import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from datetime import datetime
 from typing import Callable, List
+from bin.load import CONFIG
 
 LOG_DIR = Path("data/logs")
 LATEST_LOG = LOG_DIR / "latest.log"
@@ -29,7 +29,9 @@ class HookingHandler(logging.Handler):
 def setup_logging():
     LOG_DIR.mkdir(exist_ok=True)
 
-    log_date_format = os.environ.get("DATETIME_FORMAT", "%Y-%m-%d %H:%M:%S")
+    config = CONFIG["system"]
+
+    log_date_format = config.get("DATETIME_FORMAT", "%Y-%m-%d %H:%M:%S")
 
     if LATEST_LOG.exists():
         # Rotate log file
@@ -40,7 +42,7 @@ def setup_logging():
         except Exception as e:
             print(f"Failed to rotate log: {e}")
 
-    log_level = os.environ.get("LOG_LEVEL", "DEBUG").upper()
+    log_level = config.get("LOG_LEVEL", "INFO").upper()
     level = getattr(logging, log_level, logging.DEBUG)
 
     log_format = "[{asctime}] [{levelname:^7}] [{name}] {message}"

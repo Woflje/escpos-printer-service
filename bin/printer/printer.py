@@ -13,12 +13,11 @@ from time import sleep
 from bin.logger import logging
 import sys
 import io
-import os
 
 
 def _format_dt(dt):
     return (
-        dt.strftime(os.environ.get("DATETIME_FORMAT", "%Y-%m-%d %H:%M:%S"))
+        dt.strftime(CONFIG["system"].get("DATETIME_FORMAT", "%Y-%m-%d %H:%M:%S"))
         if dt
         else "Unknown"
     )
