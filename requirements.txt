@@ -3,3 +3,4 @@ escpos
 tinydb
 tinydb-serialization
 prometheus_client
+filelock

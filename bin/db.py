@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from typing import Any, List, Optional, cast
 from bin.message import Message, MessageRecord
 import os
+from filelock import FileLock
 
 DB_PATH = Path("data/db.json")
 DB_LOCK = Path("data/db.lock")
@@ -18,7 +19,7 @@ serialization.register_serializer(DateTimeSerializer(), "TinyDate")
 
 @contextmanager
 def get_db():
-    with open(DB_LOCK, "w"):
+    with FileLock(str(DB_LOCK)):
         db = TinyDB(DB_PATH, storage=serialization)
         try:
             yield db

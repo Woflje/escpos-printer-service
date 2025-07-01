@@ -9,7 +9,6 @@ from PIL import Image
 from io import BytesIO
 from bin.load import CONFIG, load_named_api_keys
 from emoji import demojize
-import time
 from bin.db import (
     store_message,
     load_oldest_message,
@@ -217,9 +216,12 @@ def handle_client(conn, addr):
         conn.close()
 
 
-def start_server(host: str, port: int):
+def start_server():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((host, port))
+        config = CONFIG["server"]
+        host = config.get("host", "0.0.0.0")
+        port = config.get("port", 9000)
+        s.bind((host,port))
         s.listen()
         logging.getLogger(__name__).info(f"Server listening on {host}:{port}")
         if CONFIG["server"].get("prometheus_enabled", False):
