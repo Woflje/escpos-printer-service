@@ -9,9 +9,11 @@ printer:
   dsrdtr: false
   profile: 'TM-T88III'
   always_cut: false
-  connection_type: serial
-  idVendor: 0x04b8
-  idProduct: 0x0e15
+  connection_type: usb
+  idVendor: 0x2730
+  idProduct: 0x2002
+  in_ep: 0x81
+  out_ep: 0x02
   image:
     rotate: 0
     rotate_to_fit: true
